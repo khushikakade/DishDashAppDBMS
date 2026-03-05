@@ -1,5 +1,5 @@
 # --- Configuration ---
-$BASE_URL = "http://localhost:3000"
+$BASE_URL = "http://localhost:5006"
 $LOGIN_URL = "$BASE_URL/api/users/login"
 $SEARCH_URL = "$BASE_URL/api/products/search"
 $TEST_EMAIL = "test@example.com" # Replace with a valid test user email

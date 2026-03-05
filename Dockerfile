@@ -1,23 +1,20 @@
-# Use an official Node.js runtime as a parent image
+# Use Node.js as the base image
 FROM node:18-alpine
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package files
 COPY package*.json ./
 
-# Install any needed packages
+# Install dependencies
 RUN npm install
 
-# Copy the rest of the application's source code
+# Copy application files
 COPY . .
 
-# Build TypeScript code
-RUN npm run build
+# Expose the API port
+EXPOSE 5006
 
-# Make port 3000 available to the world outside this container
-EXPOSE 3000
-
-# Run the app when the container launches
-CMD [ "npm", "start" ]
+# Start the server
+CMD ["node", "minimal_server.js"]

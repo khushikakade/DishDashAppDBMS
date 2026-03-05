@@ -1,0 +1,48 @@
+"use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var sequelize_1 = require("sequelize");
+var db_1 = require("../config/db");
+var product_model_1 = require("./product.model");
+var priceComparison_model_1 = require("./priceComparison.model");
+var Redirection = /** @class */ (function (_super) {
+    __extends(Redirection, _super);
+    function Redirection() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return Redirection;
+}(sequelize_1.Model));
+Redirection.init({
+    id: {
+        type: sequelize_1.DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
+    redirection_url: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
+}, {
+    sequelize: db_1.sequelize,
+    tableName: 'redirections',
+});
+// Associations
+Redirection.belongsTo(product_model_1.default, { foreignKey: 'productId' });
+product_model_1.default.hasMany(Redirection, { foreignKey: 'productId' });
+Redirection.belongsTo(priceComparison_model_1.default, { foreignKey: 'priceComparisonId' });
+priceComparison_model_1.default.hasMany(Redirection, { foreignKey: 'priceComparisonId' });
+exports.default = Redirection;

@@ -1,79 +1,52 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../config/db';
+import Location from './location.model';
 
 class Restaurant extends Model {
-  public id!: number;
+  public restaurant_id!: number;
   public name!: string;
+  public location_id!: number;
   public address!: string;
-  public cuisine!: string;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public famous_for!: string;
+  public rating!: number;
+  public is_active!: boolean;
 }
 
 Restaurant.init({
-  id: {
+  restaurant_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
   name: {
     type: DataTypes.STRING,
+    allowNull: false,
+  },
+  location_id: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   address: {
     type: DataTypes.STRING,
-    allowNull: false,
   },
-  cuisine: {
+  famous_for: {
     type: DataTypes.STRING,
-    allowNull: false,
+  },
+  rating: {
+    type: DataTypes.DECIMAL(2, 1),
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
   },
 }, {
   sequelize,
   tableName: 'restaurants',
+  timestamps: false,
 });
 
-class MenuItem extends Model {
-  public id!: number;
-  public name!: string;
-  public description!: string;
-  public price!: number;
-  public category!: string;
-  public restaurantId!: number;
+// Associations
+Restaurant.belongsTo(Location, { foreignKey: 'location_id' });
+Location.hasMany(Restaurant, { foreignKey: 'location_id' });
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-}
-
-MenuItem.init({
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-  price: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-  },
-  category: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-}, {
-  sequelize,
-  tableName: 'menu_items',
-});
-
-Restaurant.hasMany(MenuItem, { foreignKey: 'restaurantId' });
-MenuItem.belongsTo(Restaurant, { foreignKey: 'restaurantId' });
-
-export { Restaurant, MenuItem };
+export default Restaurant;

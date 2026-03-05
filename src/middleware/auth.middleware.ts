@@ -21,12 +21,13 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
       }
 
       // Change this line:
+  
       (req as any).user = user;
       return next(); 
     } catch (error) {
       console.error("JWT Error:", error);
       return res.status(401).json({ message: 'Not authorized, token failed' });
-    }
+  }
   }
 
   if (!token) {
