@@ -40,24 +40,25 @@ const Hero = ({ onSearch }) => {
 
                     <div className="hero-stats">
                         <div className="stat">
-                            <span className="count">{stats.totalDishes}+</span>
+                            <span className="count">{(stats.totalProducts || 0)}+</span>
                             <span className="label">Dishes</span>
                         </div>
                         <div className="stat">
                             <span className="divider"></span>
                         </div>
                         <div className="stat">
-                            <span className="count">{stats.totalPlatforms}</span>
+                            <span className="count">{(stats.platforms || 0)}</span>
                             <span className="label">Platforms</span>
                         </div>
                         <div className="stat">
                             <span className="divider"></span>
                         </div>
                         <div className="stat">
-                            <span className="count">Up to {stats.maxDiscount}%</span>
+                            <span className="count">Up to {stats.savings || '0%'}</span>
                             <span className="label">Savings</span>
                         </div>
                     </div>
+
                 </div>
                 <div className="hero-image">
                     <div className="image-placeholder glass-card">

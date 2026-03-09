@@ -16,12 +16,12 @@ Price.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    productId: {
+    product_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'products',
-        key: 'id',
+        key: 'product_id',
       },
     },
     platform: {
@@ -41,8 +41,9 @@ Price.init(
   {
     sequelize,
     tableName: 'prices',
-    timestamps: false, // We'll manage timestamp manually
+    timestamps: false,
   }
 );
+
 
 export default Price;

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as priceComparisonService from '../services/priceComparison.service';
+import { callResearcher } from '../services/integration.service';
 
 export const createPriceComparison = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -12,7 +13,8 @@ export const createPriceComparison = async (req: Request, res: Response, next: N
 
 export const getPriceComparisons = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const priceComparisons = await priceComparisonService.getPriceComparisons();
+    const { category, search } = req.query;
+    const priceComparisons = await priceComparisonService.getPriceComparisons({ category, search });
     res.json(priceComparisons);
   } catch (error) {
     next(error);
@@ -45,10 +47,6 @@ export const updatePriceComparison = async (req: Request, res: Response, next: N
   }
 };
 
-import { IntegrationService } from '../services/integration.service';
-
-const integrationService = new IntegrationService();
-
 export const deletePriceComparison = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const priceComparison = await priceComparisonService.deletePriceComparison(Number(req.params.id));
@@ -68,9 +66,10 @@ export const compareProductPrices = async (req: Request, res: Response, next: Ne
     if (!productName) {
       return res.status(400).json({ message: 'productName is required' });
     }
-    const comparisonResults = await integrationService.comparePrices(productName);
+    const comparisonResults = await callResearcher(productName);
     res.status(200).json(comparisonResults);
   } catch (error) {
     next(error);
   }
 };
+

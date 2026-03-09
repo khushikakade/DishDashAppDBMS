@@ -1,7 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../config/db';
-import User from './user.model';
-import { Restaurant } from './restaurant.model';
 
 class Order extends Model {
   public id!: number;
@@ -28,6 +26,14 @@ Order.init({
     type: DataTypes.ENUM('Pending', 'Preparing', 'Delivered', 'Cancelled'),
     allowNull: false,
     defaultValue: 'Pending',
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  restaurantId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
 }, {
   sequelize,
@@ -63,19 +69,14 @@ OrderItem.init({
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
+  orderId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 }, {
   sequelize,
   tableName: 'order_items',
 });
 
-// Associations
-Order.belongsTo(User, { foreignKey: 'userId' });
-User.hasMany(Order, { foreignKey: 'userId' });
-
-Order.belongsTo(Restaurant, { foreignKey: 'restaurantId' });
-Restaurant.hasMany(Order, { foreignKey: 'restaurantId' });
-
-Order.hasMany(OrderItem, { foreignKey: 'orderId' });
-OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
-
 export { Order, OrderItem };
+

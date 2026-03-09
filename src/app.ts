@@ -8,6 +8,7 @@ import orderRoutes from './routes/order.routes';
 import restaurantRoutes from './routes/restaurant.routes';
 import redirectionRoutes from './routes/redirection.routes';
 import priceComparisonRoutes from './routes/priceComparison.routes';
+import miscRoutes from './routes/misc.routes';
 
 const app = express();
 
@@ -22,6 +23,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/redirections', redirectionRoutes);
 app.use('/api/price-comparisons', priceComparisonRoutes);
+app.use('/api', miscRoutes); // Handles /api/categories and /api/stats
+
 
 app.use(errorHandler);
 

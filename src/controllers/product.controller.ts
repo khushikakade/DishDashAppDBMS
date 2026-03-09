@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { fetchPrices } from '../services/scraper.service';
-import Price from '../models/Price';
-import Product from '../models/Product';
+import Price from '../models/price.model';
+import Product from '../models/product.model';
+
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -36,7 +37,7 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const [updated] = await Product.update(req.body, {
-      where: { id: req.params.id },
+      where: { product_id: req.params.id },
     });
     if (updated) {
       const updatedProduct = await Product.findByPk(req.params.id);
@@ -51,7 +52,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const deleted = await Product.destroy({
-      where: { id: req.params.id },
+      where: { product_id: req.params.id },
     });
     if (deleted) {
       return res.status(204).send();
@@ -72,8 +73,8 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
   try {
     // Find or create the product
     const [product] = await Product.findOrCreate({
-      where: { name: productName },
-      defaults: { name: productName }, // Add other defaults like description, imageUrl if applicable
+      where: { product_name: productName },
+      defaults: { product_name: productName }, // Add other defaults like description, imageUrl if applicable
     });
 
     // Fetch prices from the scraper service
@@ -83,7 +84,7 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
     const createdPrices = await Promise.all(
       fetchedPrices.map((item: { platform: string; price: number }) =>
         Price.create({
-          productId: product.id,
+          product_id: product.product_id,
           platform: item.platform,
           price: item.price,
           timestamp: new Date(),
@@ -100,3 +101,4 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 };
+

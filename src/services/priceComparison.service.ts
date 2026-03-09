@@ -1,38 +1,48 @@
 import PriceComparison from '../models/priceComparison.model';
-import MenuItem from '../models/menuItem.model';
-import Restaurant from '../models/restaurant.model';
-import Location from '../models/location.model';
+import Product from '../models/product.model';
 import Platform from '../models/platform.model';
+import Redirection from '../models/redirection.model';
+import { Op } from 'sequelize';
+
 
 export const createPriceComparison = async (priceComparisonData: any): Promise<PriceComparison> => {
   return await PriceComparison.create(priceComparisonData);
 };
 
-export const getPriceComparisons = async (): Promise<any[]> => {
-  const menuItems = await MenuItem.findAll({
+export const getPriceComparisons = async (filters: any = {}): Promise<any[]> => {
+  const { category, search } = filters;
+  const where: any = {};
+  if (category && category !== 'All') where.category = category;
+  if (search) {
+    where[Op.or] = [
+      { product_name: { [Op.like]: `%${search}%` } },
+      { restaurant_name: { [Op.like]: `%${search}%` } },
+      { category: { [Op.like]: `%${search}%` } }
+    ];
+  }
+
+  const products = await Product.findAll({
+    where,
     include: [
       {
-        model: Restaurant,
-        include: [Location]
-      },
-      {
         model: PriceComparison,
-        include: [Platform]
+        include: [
+          Platform,
+          { model: Redirection }
+        ]
       }
     ]
   });
 
-  return menuItems.map((item: any) => {
+  return products.map((item: any) => {
     const platforms = item.PriceComparisons
-      .filter((pc: any) => pc.Platform.status === 'Active')
       .map((pc: any) => ({
-        name: pc.Platform.name,
-        price: parseFloat(pc.final_price),
-        base_price: parseFloat(pc.platform_base_price),
-        packaging: parseFloat(pc.packaging_charge),
-        delivery: parseFloat(pc.delivery_fee),
-        discount: parseFloat(pc.discount_percentage),
-        link: `https://${pc.Platform.name.toLowerCase()}.com/search?q=${encodeURIComponent(item.item_name)}`,
+        name: pc.Platform.platform_name,
+        price: parseFloat(pc.price),
+        discount: parseFloat(pc.discount),
+        link: pc.Redirections && pc.Redirections.length > 0
+          ? pc.Redirections[0].redirect_url
+          : `https://${pc.Platform.platform_name.toLowerCase()}.com/search?q=${encodeURIComponent(item.product_name)}`,
       }));
 
     // Identify Best Deal
@@ -44,9 +54,11 @@ export const getPriceComparisons = async (): Promise<any[]> => {
     }
 
     return {
-      id: item.item_id,
-      name: item.item_name,
-      description: `${item.item_name} from ${item.Restaurant.name} (${item.Restaurant.Location.area_name}). ${item.Restaurant.famous_for}.`,
+      id: item.product_id,
+      name: item.product_name,
+      restaurant_name: item.restaurant_name,
+      category: item.category,
+      description: `${item.product_name} from ${item.restaurant_name}`,
       image: item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800',
       platforms: platforms
     };
@@ -58,10 +70,11 @@ export const getPriceComparisonById = async (id: number): Promise<PriceCompariso
 };
 
 export const updatePriceComparison = async (id: number, priceComparisonData: Partial<PriceComparison>): Promise<PriceComparison | null> => {
-  await PriceComparison.update(priceComparisonData, { where: { id } });
+  await PriceComparison.update(priceComparisonData, { where: { comparison_id: id } });
   return await PriceComparison.findByPk(id);
 };
 
 export const deletePriceComparison = async (id: number): Promise<number> => {
-  return await PriceComparison.destroy({ where: { id } });
+  return await PriceComparison.destroy({ where: { comparison_id: id } });
 };
+

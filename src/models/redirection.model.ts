@@ -4,35 +4,30 @@ import Product from './product.model';
 import PriceComparison from './priceComparison.model';
 
 class Redirection extends Model {
-  public id!: number;
-  public redirection_url!: string;
-  public productId!: number;
-  public priceComparisonId!: number;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public redirect_id!: number;
+  public comparison_id!: number;
+  public redirect_url!: string;
 }
 
 Redirection.init({
-  id: {
+  redirect_id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
     primaryKey: true,
   },
-  redirection_url: {
+  comparison_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  redirect_url: {
     type: DataTypes.STRING,
     allowNull: false,
   },
 }, {
   sequelize,
-  tableName: 'redirections',
+  tableName: 'redirection',
+  timestamps: false,
 });
 
-// Associations
-Redirection.belongsTo(Product, { foreignKey: 'productId' });
-Product.hasMany(Redirection, { foreignKey: 'productId' });
-
-Redirection.belongsTo(PriceComparison, { foreignKey: 'priceComparisonId' });
-PriceComparison.hasMany(Redirection, { foreignKey: 'priceComparisonId' });
 
 export default Redirection;
+

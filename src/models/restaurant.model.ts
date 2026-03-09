@@ -1,6 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../config/db';
-import Location from './location.model';
 
 class Restaurant extends Model {
   public restaurant_id!: number;
@@ -45,8 +44,5 @@ Restaurant.init({
   timestamps: false,
 });
 
-// Associations
-Restaurant.belongsTo(Location, { foreignKey: 'location_id' });
-Location.hasMany(Restaurant, { foreignKey: 'location_id' });
-
 export default Restaurant;
+

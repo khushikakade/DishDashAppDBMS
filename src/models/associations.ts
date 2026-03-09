@@ -1,16 +1,44 @@
-import Product from './Product';
-import Price from './Price';
+import Product from './product.model';
+import Price from './price.model';
+import Restaurant from './restaurant.model';
+import Location from './location.model';
+import User from './user.model';
+import { Order, OrderItem } from './order.model';
+import MenuItem from './menuItem.model';
+import Platform from './platform.model';
+import PriceComparison from './priceComparison.model';
+import Redirection from './redirection.model';
 
 const setupAssociations = () => {
-  Product.hasMany(Price, {
-    foreignKey: 'productId',
-    as: 'prices',
-  });
+  // Product <-> Price
+  Product.hasMany(Price, { foreignKey: 'product_id', as: 'prices' });
+  Price.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
-  Price.belongsTo(Product, {
-    foreignKey: 'productId',
-    as: 'product',
-  });
+  // Platform <-> PriceComparison
+  Platform.hasMany(PriceComparison, { foreignKey: 'platform_id' });
+  PriceComparison.belongsTo(Platform, { foreignKey: 'platform_id' });
+
+  // Product <-> PriceComparison
+  Product.hasMany(PriceComparison, { foreignKey: 'product_id' });
+  PriceComparison.belongsTo(Product, { foreignKey: 'product_id' });
+
+
+  // PriceComparison <-> Redirection
+  PriceComparison.hasMany(Redirection, { foreignKey: 'comparison_id' });
+  Redirection.belongsTo(PriceComparison, { foreignKey: 'comparison_id' });
+
+  // User <-> Order
+  User.hasMany(Order, { foreignKey: 'user_id' });
+  Order.belongsTo(User, { foreignKey: 'user_id' });
+
+
+  // Restaurant <-> Order
+  Restaurant.hasMany(Order, { foreignKey: 'restaurantId' });
+  Order.belongsTo(Restaurant, { foreignKey: 'restaurantId' });
+
+  // Order <-> OrderItem
+  Order.hasMany(OrderItem, { foreignKey: 'orderId' });
+  OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 };
 
 export default setupAssociations;

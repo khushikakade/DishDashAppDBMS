@@ -43,8 +43,5 @@ MenuItem.init({
     timestamps: false,
 });
 
-// Associations
-MenuItem.belongsTo(Restaurant, { foreignKey: 'restaurant_id' });
-Restaurant.hasMany(MenuItem, { foreignKey: 'restaurant_id' });
-
 export default MenuItem;
+

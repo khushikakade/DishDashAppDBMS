@@ -2,21 +2,26 @@ import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../config/db';
 
 class Product extends Model {
-  public id!: number;
+  public product_id!: number;
   public product_name!: string;
+  public restaurant_name!: string;
   public category!: string;
+  public image_url!: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
 Product.init({
-  id: {
+  product_id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
     primaryKey: true,
   },
   product_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  restaurant_name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -24,9 +29,16 @@ Product.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
+  image_url: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   sequelize,
   tableName: 'products',
+  timestamps: false,
 });
 
+
 export default Product;
+
