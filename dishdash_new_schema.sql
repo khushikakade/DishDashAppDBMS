@@ -15,20 +15,25 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- --------------------------------------------------
 
 CREATE TABLE users (
-  user_id INT PRIMARY KEY,
+  user_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100),
-  email VARCHAR(150)
+  email VARCHAR(150) UNIQUE,
+  password VARCHAR(255) DEFAULT 'password123',
+  last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-INSERT INTO users VALUES
-(1,'Rahul Sharma','rahul@gmail.com'),
-(2,'Priya Mehta','priya@gmail.com'),
-(3,'Amit Patil','amit@gmail.com'),
-(4,'Sneha Kulkarni','sneha@gmail.com'),
-(5,'Aditya Deshmukh','aditya@gmail.com'),
-(6,'Neha Joshi','neha@gmail.com'),
-(7,'Rohan Gupta','rohan@gmail.com'),
-(8,'Kavya Iyer','kavya@gmail.com');
+INSERT INTO users (user_id, name, email, password) VALUES
+(1,'Rahul Sharma','rahul@gmail.com', 'rahul123'),
+(2,'Priya Mehta','priya@gmail.com', 'priya123'),
+(3,'Amit Patil','amit@gmail.com', 'amit123'),
+(4,'Sneha Kulkarni','sneha@gmail.com', 'sneha123'),
+(5,'Aditya Deshmukh','aditya@gmail.com', 'aditya123'),
+(6,'Neha Joshi','neha@gmail.com', 'neha123'),
+(7,'Rohan Gupta','rohan@gmail.com', 'rohan123'),
+(8,'Kavya Iyer','kavya@gmail.com', 'kavya123');
+
+
+
 
 -- --------------------------------------------------
 -- PLATFORMS
@@ -964,3 +969,17 @@ INSERT INTO redirection VALUES
 (598,598,'https://www.eatsure.com/search/culture-paneer-sizzler'),
 (599,599,'https://magicpin.in/search/?q=culture+paneer+sizzler'),
 (600,600,'https://www.Toing.com/search?q=culture+paneer+sizzler');
+
+-- --------------------------------------------------
+-- FAVORITES (New Table for Real Movement of Data)
+-- --------------------------------------------------
+
+CREATE TABLE favorites (
+  fav_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  product_id INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+  UNIQUE KEY unique_fav (user_id, product_id)
+);

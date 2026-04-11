@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 import './CompareCard.css';
 
 // Reliable platform logo URLs
@@ -19,7 +21,7 @@ const PLATFORM_COLORS = {
     'Toing': '#E91E63'
 };
 
-const CompareCard = ({ dish }) => {
+const CompareCard = ({ dish, initialIsFav = false, onFavChange = () => {} }) => {
     const { id, name, image, description, platforms, category } = dish;
 
     const getFrontendImage = (dishName) => {
@@ -205,22 +207,44 @@ const CompareCard = ({ dish }) => {
     const totalSavings = worstPrice - bestPrice;
 
     // Favorites logic
-    const [isFav, setIsFav] = React.useState(() => {
-        const favs = JSON.parse(localStorage.getItem('dishdash_favorites') || '[]');
-        return favs.includes(id);
-    });
+    const { user } = useAuth();
+    const [isFav, setIsFav] = useState(false);
 
-    const toggleFavorite = (e) => {
+    // Initial check: is this dish a favorite?
+    useEffect(() => {
+        setIsFav(initialIsFav);
+    }, [initialIsFav]);
+
+    const toggleFavorite = async (e) => {
         e.stopPropagation();
-        const favs = JSON.parse(localStorage.getItem('dishdash_favorites') || '[]');
-        let newFavs;
-        if (favs.includes(id)) {
-            newFavs = favs.filter(f => f !== id);
-        } else {
-            newFavs = [...favs, id];
+        if (!user?.id) {
+            alert('Please login to save favorites!');
+            return;
         }
-        localStorage.setItem('dishdash_favorites', JSON.stringify(newFavs));
-        setIsFav(!isFav);
+
+        const currentlyFav = isFav;
+        // Optimistic UI update
+        setIsFav(!currentlyFav);
+
+        try {
+            if (currentlyFav) {
+                // Remove from DB
+                await fetch(`${API_BASE_URL}/api/favorites/${user.id}/${id}`, { method: 'DELETE' });
+            } else {
+                // Add to DB
+                await fetch(`${API_BASE_URL}/api/favorites`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, productId: id })
+                });
+            }
+            // Notify parent
+            onFavChange(id, !currentlyFav);
+        } catch (err) {
+            console.error('Error toggling favorite:', err);
+            // Revert on error
+            setIsFav(currentlyFav);
+        }
     };
 
     return (

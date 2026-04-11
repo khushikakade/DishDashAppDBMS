@@ -12,8 +12,8 @@ export function AuthProvider({ children }) {
         }
     });
 
-    const login = (name, email) => {
-        const userData = { name, email };
+    const login = (id, name, email) => {
+        const userData = { id, name, email };
         localStorage.setItem('dishdash_user', JSON.stringify(userData));
         setUser(userData);
     };

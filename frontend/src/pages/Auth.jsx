@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 import './Auth.css';
 
 const Auth = () => {
@@ -15,14 +16,29 @@ const Auth = () => {
     // Already logged in → go home
     if (isAuthenticated) return <Navigate to="/" replace />;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => {
-            login(isLogin ? (email.split('@')[0] || 'Foodie') : name, email);
-            setLoading(false);
+        try {
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const body = isLogin ? { email, password } : { name, email, password };
+            
+            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Authentication failed');
+            
+            login(data.id, data.name, data.email);
             navigate('/');
-        }, 800);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

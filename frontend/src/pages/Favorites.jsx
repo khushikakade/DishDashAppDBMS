@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CompareCard from '../components/CompareCard';
+import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
 const Favorites = () => {
@@ -7,20 +8,27 @@ const Favorites = () => {
     const [allDishes, setAllDishes] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const { user } = useAuth();
+    
     useEffect(() => {
-        // Load favorites from localStorage
-        const savedFavs = JSON.parse(localStorage.getItem('dishdash_favorites') || '[]');
-        setFavorites(savedFavs);
+        if (!user?.id) {
+            setLoading(false);
+            return;
+        }
 
-        // Fetch all dishes
-        fetch(`${API_BASE_URL}/api/price-comparisons`)
-            .then(res => res.json())
-            .then(data => {
-                setAllDishes(data);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, []);
+        // 1. Fetch user's favorite IDs from DB
+        // 2. Fetch all dishes to show them
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/favorites/${user.id}`).then(res => res.json()),
+            fetch(`${API_BASE_URL}/api/price-comparisons`).then(res => res.json())
+        ])
+        .then(([favIds, dishes]) => {
+            setFavorites(Array.isArray(favIds) ? favIds : []);
+            setAllDishes(dishes);
+            setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }, [user]);
 
     const favDishes = allDishes.filter(d => favorites.includes(d.id));
 

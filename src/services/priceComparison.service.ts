@@ -14,10 +14,11 @@ export const getPriceComparisons = async (filters: any = {}): Promise<any[]> => 
   const where: any = {};
   if (category && category !== 'All') where.category = category;
   if (search) {
+    const s = (search as string).toLowerCase();
     where[Op.or] = [
-      { product_name: { [Op.like]: `%${search}%` } },
-      { restaurant_name: { [Op.like]: `%${search}%` } },
-      { category: { [Op.like]: `%${search}%` } }
+      { product_name: { [Op.like]: `%${s}%` } },
+      { restaurant_name: { [Op.like]: `%${s}%` } },
+      { category: { [Op.like]: `%${s}%` } }
     ];
   }
 

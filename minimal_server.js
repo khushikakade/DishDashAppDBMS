@@ -26,7 +26,8 @@ const dbConfig = {
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE || 'test',
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
     },
     waitForConnections: true,
     connectionLimit: 10,
@@ -250,16 +251,19 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
-// ── GET /api/stats ──────────────────────────────────────────
-app.get('/api/stats', async (req, res) => {
+// ── AUTH ENDPOINTS ──────────────────────────────────────────
+app.post('/api/auth/register', async (req, res) => {
     try {
-        const [[productCount]] = await pool.query(`SELECT COUNT(*) as cnt FROM products`);
-        const [[platformCount]] = await pool.query(`SELECT COUNT(*) as cnt FROM platforms`);
-        const [[maxDiscount]] = await pool.query(`SELECT MAX(discount) as maxDisc FROM pricecomparison`);
-        res.json({
-            totalProducts: productCount.cnt,
-            platforms: platformCount.cnt,
-            savings: `${maxDiscount.maxDisc}%`
+        const { name, email, password } = req.body;
+        const [result] = await pool.query(
+            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            [name, email, password]
+        );
+        res.status(201).json({ 
+            id: result.insertId, 
+            name, 
+            email,
+            message: 'User registered successfully in database!' 
         });
     } catch (err) {
         console.error(err);
@@ -267,7 +271,100 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const [rows] = await pool.query(
+            'SELECT user_id as id, name, email FROM users WHERE email = ? AND password = ?',
+            [email, password]
+        );
+
+        if (rows.length > 0) {
+            const user = rows[0];
+            
+            // ── DBMS MOVEMENT: Update last_login ──
+            try {
+                await pool.query('UPDATE users SET last_login = NOW() WHERE user_id = ?', [user.id]);
+                console.log(`\x1b[32m[DBMS MOVEMENT]\x1b[0m User Logged In: ${user.name} (${user.email}) - Last login updated.`);
+            } catch (updateErr) {
+                console.error('Failed to update last_login:', updateErr.message);
+            }
+
+            res.json(user);
+        } else {
+            res.status(401).json({ error: 'Invalid email or password' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── FAVORITES ENDPOINTS ──────────────────────────────────────
+app.get('/api/favorites/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const [rows] = await pool.query(
+            'SELECT product_id FROM favorites WHERE user_id = ?',
+            [userId]
+        );
+        res.json(rows.map(r => r.product_id));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/favorites', async (req, res) => {
+    try {
+        const { userId, productId } = req.body;
+        await pool.query(
+            'INSERT IGNORE INTO favorites (user_id, product_id) VALUES (?, ?)',
+            [userId, productId]
+        );
+        console.log(`\x1b[35m[DBMS MOVEMENT]\x1b[0m Added Favorite: User ${userId} ❤️ Product ${productId}`);
+        res.json({ success: true, message: 'Added to favorites in DB!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/favorites/:userId/:productId', async (req, res) => {
+    try {
+        const { userId, productId } = req.params;
+        await pool.query(
+            'DELETE FROM favorites WHERE user_id = ? AND product_id = ?',
+            [userId, productId]
+        );
+        console.log(`\x1b[31m[DBMS MOVEMENT]\x1b[0m Removed Favorite: User ${userId} 💔 Product ${productId}`);
+        res.json({ success: true, message: 'Removed from favorites in DB!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── DB LIVE VIEW (Monitor) ──────────────────────────────
+app.get('/api/db-monitor', async (req, res) => {
+    try {
+        const [users] = await pool.query('SELECT user_id, name, email, last_login FROM users ORDER BY user_id DESC LIMIT 5');
+        const [favs] = await pool.query(`
+            SELECT f.fav_id, u.name as user, p.product_name as product, f.created_at 
+            FROM favorites f
+            JOIN users u ON f.user_id = u.user_id
+            JOIN products p ON f.product_id = p.product_id
+            ORDER BY f.fav_id DESC LIMIT 5
+        `);
+        res.json({ users, favorites: favs });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 const PORT = process.env.PORT || 5006;
+
 app.listen(PORT, () => {
     console.log(`🍽️  DishDash Server running on http://localhost:${PORT}`);
     console.log(`📡 Database pool initialized with 10 connections`);

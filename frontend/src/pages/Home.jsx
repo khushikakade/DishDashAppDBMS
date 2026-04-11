@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Hero from '../components/Hero';
 import CompareCard from '../components/CompareCard';
+import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
 const SORT_OPTIONS = [
@@ -21,6 +23,8 @@ const Home = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showSurprise, setShowSurprise] = useState(false);
     const [surpriseDish, setSurpriseDish] = useState(null);
+    const [userFavIds, setUserFavIds] = useState([]);
+    const { user } = useAuth();
     const ITEMS_PER_PAGE = 6;
 
     // Fetch categories on mount
@@ -30,6 +34,20 @@ const Home = () => {
             .then(data => setCategories(['All', ...data]))
             .catch(err => console.error('Error fetching categories:', err));
     }, []);
+
+    // NEW: Fetch all favorites for the logged-in user ONCE
+    useEffect(() => {
+        if (!user?.id) {
+            setUserFavIds([]);
+            return;
+        }
+        fetch(`${API_BASE_URL}/api/favorites/${user.id}`)
+            .then(res => res.json())
+            .then(ids => {
+                if (Array.isArray(ids)) setUserFavIds(ids);
+            })
+            .catch(err => console.error('Error fetching global favorites:', err));
+    }, [user]);
 
     const fetchDishes = (searchQuery = '', category = '') => {
         setLoading(true);
@@ -110,6 +128,33 @@ const Home = () => {
                     <p>Find the best value for your favorite dishes across 5 platforms.</p>
                 </div>
 
+                {/* ── NEW: Your Favorites Quick Access ── */}
+                {user && userFavIds.length > 0 && !loading && dishes.length > 0 && (
+                    <div className="favorites-quick-section" style={{ marginBottom: '3rem', padding: '1.5rem', background: 'rgba(233, 30, 99, 0.05)', borderRadius: '1.5rem', border: '1px dashed var(--primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                            <span style={{ fontSize: '1.5rem' }}>❤️</span>
+                            <h3 style={{ margin: 0, color: 'var(--primary)' }}>Your Favorites</h3>
+                        </div>
+                        <div className="dish-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                            {dishes.filter(d => userFavIds.includes(d.id)).slice(0, 3).map(dish => (
+                                <CompareCard 
+                                    key={`fav-${dish.id}`} 
+                                    dish={dish} 
+                                    initialIsFav={true} 
+                                    onFavChange={(id, isFav) => {
+                                        setUserFavIds(prev => isFav ? [...prev, id] : prev.filter(x => x !== id));
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        {userFavIds.length > 3 && (
+                            <div style={{ textAlign: 'right', marginTop: '1rem' }}>
+                                <Link to="/favorites" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>View all favorites →</Link>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* ── Category Filter Tabs ── */}
                 <div className="category-tabs">
                     {categories.map(cat => (
@@ -176,7 +221,14 @@ const Home = () => {
                     <>
                         <div className="dish-grid">
                             {sortedDishes.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((dish) => (
-                                <CompareCard key={dish.id} dish={dish} />
+                                <CompareCard 
+                                    key={dish.id} 
+                                    dish={dish} 
+                                    initialIsFav={userFavIds.includes(dish.id)}
+                                    onFavChange={(id, isFav) => {
+                                        setUserFavIds(prev => isFav ? [...prev, id] : prev.filter(x => x !== id));
+                                    }}
+                                />
                             ))}
                         </div>
 
